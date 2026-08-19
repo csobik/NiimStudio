@@ -10,11 +10,11 @@ Run checks in this order where they apply:
 | Scope | Check | Command |
 | --- | --- | --- |
 | Every change | Diff whitespace and conflict markers | `git diff --check` |
-| Python | Syntax/import compilation | `python -m compileall -q NiimStudio` |
-| Python metadata | Poetry validity | `poetry check` |
-| Python tests | Unit, integration, and minimum 80% coverage | `poetry run pytest` |
-| Python lint | Ruff static checks | `poetry run ruff check NiimStudio tests` |
-| Python format | Ruff formatting | `poetry run ruff format --check NiimStudio tests` |
+| Python | Syntax/import compilation | `poetry --directory backend run python -m compileall -q backend/src/niimstudio` |
+| Python metadata | Poetry validity | `poetry --directory backend check` |
+| Python tests | Unit, integration, and minimum 80% coverage | `poetry --directory backend run pytest -c backend/pyproject.toml` |
+| Python lint | Ruff static checks | `poetry --directory backend run ruff check backend/src/niimstudio backend/tests` |
+| Python format | Ruff formatting | `poetry --directory backend run ruff format --check backend/src/niimstudio backend/tests` |
 | Frontend | Type check, lint, tests, production build | Run the scripts defined in `frontend/package.json` |
 | API/frontend integration | Contract and browser integration tests | Run the repository-defined suites |
 | Documentation | Paths, commands, and cross-references | Verify against the current tree |

@@ -15,10 +15,10 @@ The product requirements and priorities are in `ai/project_features.md`.
 
 The repository currently contains a standalone Python console application:
 
-- `NiimStudio/nimmy/`: BLE transport, printer protocol, and raster encoding
-- `NiimStudio/cli/`: Click CLI
-- `spec_files/cli_app/`: PyInstaller console packaging
-- `tests/`: hardware-independent CLI and printer-core verification
+- `backend/src/niimstudio/nimmy/`: BLE transport, printer protocol, and raster encoding
+- `backend/src/niimstudio/cli/`: Click CLI
+- `backend/spec_files/cli_app/`: PyInstaller console packaging
+- `backend/tests/`: hardware-independent CLI and printer-core verification
 
 The historical Tkinter editor, assets, unsafe `.niim` persistence, and GUI
 packaging are archived on the non-merge branch `legacy/tkinter-app`. The main
@@ -60,14 +60,17 @@ Rules:
 The package migration should converge incrementally toward:
 
 ```text
-NiimStudio/
-  domain/
-  application/
-  adapters/
-  api/
-  cli/
+backend/
+  src/
+    niimstudio/
+      domain/
+      application/
+      adapters/
+      api/
+      cli/
 frontend/
   src/
+desktop/
 ```
 
 Do not move files merely to match this tree. Extract a boundary when a feature

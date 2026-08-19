@@ -11,6 +11,9 @@ permissions:
 
 jobs:
   test:
+    defaults:
+      run:
+        working-directory: backend
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
@@ -30,11 +33,11 @@ jobs:
       - name: Validate package metadata
         run: poetry check
       - name: Compile Python sources
-        run: poetry run python -m compileall -q NiimStudio
+        run: poetry run python -m compileall -q src/niimstudio
       - name: Check code style
-        run: poetry run ruff check NiimStudio tests
+        run: poetry run ruff check src/niimstudio tests
       - name: Check formatting
-        run: poetry run ruff format --check NiimStudio tests
+        run: poetry run ruff format --check src/niimstudio tests
       - name: Run tests
         run: poetry run pytest
       - name: Build Python distributions

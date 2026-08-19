@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock
 import pytest
 from PIL import Image
 
-from NiimStudio.nimmy.exception import BLEException, PrinterException
-from NiimStudio.nimmy.packet import NiimbotPacket
-from NiimStudio.nimmy.printer import MAX_RASTER_WIDTH, InfoEnum, PrinterClient, RequestCodeEnum
+from niimstudio.nimmy.exception import BLEException, PrinterException
+from niimstudio.nimmy.packet import NiimbotPacket
+from niimstudio.nimmy.printer import MAX_RASTER_WIDTH, InfoEnum, PrinterClient, RequestCodeEnum
 
 
 def create_printer():
@@ -347,7 +347,7 @@ def test_print_image_runs_complete_protocol_sequence(monkeypatch):
     raster = Image.new("1", (20, 11))
     monkeypatch.setattr(printer, "_prepare_raster", lambda *args: raster)
     monkeypatch.setattr(printer, "_encode_raster", lambda *args: iter(packets))
-    monkeypatch.setattr("NiimStudio.nimmy.printer.asyncio.sleep", AsyncMock())
+    monkeypatch.setattr("niimstudio.nimmy.printer.asyncio.sleep", AsyncMock())
     image = Image.new("1", (16, 8))
 
     asyncio.run(
@@ -399,7 +399,7 @@ def test_print_image_times_out_and_terminates_started_job(monkeypatch):
     printer.write_raw = AsyncMock()
     printer.end_page_print = AsyncMock(return_value=False)
     printer.end_print = AsyncMock(return_value=True)
-    monkeypatch.setattr("NiimStudio.nimmy.printer.PRINT_POLL_INTERVAL_SECONDS", 0.01)
+    monkeypatch.setattr("niimstudio.nimmy.printer.PRINT_POLL_INTERVAL_SECONDS", 0.01)
 
     with pytest.raises(PrinterException, match="timed out"):
         asyncio.run(printer.print_image(Image.new("1", (8, 1)), timeout=0.001))

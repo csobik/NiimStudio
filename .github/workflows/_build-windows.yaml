@@ -21,20 +21,29 @@ jobs:
         with:
           python-version: "3.12"
           cache: poetry
+          cache-dependency-path: backend/poetry.lock
+      - name: Select Python interpreter
+        working-directory: backend
+        run: poetry env use "$env:pythonLocation\python.exe"
       - name: Install dependencies
+        working-directory: backend
         run: poetry install
       - name: Run tests
+        working-directory: backend
         run: poetry run pytest
       - name: Package console application
+        working-directory: backend
         run: poetry run pyinstaller spec_files/cli_app/NiimStudio.spec --noconfirm --clean
       - name: Smoke-test executable
+        working-directory: backend
         run: .\dist\niimstudio.exe --help
       - name: Create archive
         shell: pwsh
+        working-directory: backend
         run: Compress-Archive -Path .\dist\niimstudio.exe -DestinationPath "NiimStudio-CLI-${{ steps.version.outputs.VERSION }}-Windows-X64.zip"
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: NiimStudio-CLI-${{ steps.version.outputs.VERSION }}-Windows-X64.zip
-          path: NiimStudio-CLI-${{ steps.version.outputs.VERSION }}-Windows-X64.zip
+          path: backend/NiimStudio-CLI-${{ steps.version.outputs.VERSION }}-Windows-X64.zip
           retention-days: 1

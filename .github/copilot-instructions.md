@@ -10,12 +10,12 @@ available only on the non-merge branch `legacy/tkinter-app` for reference.
 Use Poetry for setup and verification:
 
 ```bash
-poetry install
-poetry check
-poetry run python -m compileall -q NiimStudio
-poetry run ruff check NiimStudio tests
-poetry run ruff format --check NiimStudio tests
-poetry run pytest
+poetry --directory backend install
+poetry --directory backend check
+poetry --directory backend run python -m compileall -q backend/src/niimstudio
+poetry --directory backend run ruff check backend/src/niimstudio backend/tests
+poetry --directory backend run ruff format --check backend/src/niimstudio backend/tests
+poetry --directory backend run pytest -c backend/pyproject.toml
 ```
 
 Normal tests never discover or connect to real Bluetooth devices. Use fake

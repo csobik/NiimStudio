@@ -5,8 +5,8 @@ from pathlib import Path
 project_root = Path(SPECPATH).parents[1]
 
 a = Analysis(
-    [str(project_root / "NiimStudio" / "cli" / "__main__.py")],
-    pathex=[str(project_root)],
+    [str(project_root / "src" / "niimstudio" / "cli" / "__main__.py")],
+    pathex=[str(project_root / "src")],
     binaries=[],
     datas=[],
     hiddenimports=[],
