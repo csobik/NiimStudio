@@ -1,138 +1,91 @@
-<h1 align="center">NiimPrintX</h1>
-<p align="center">
-<a href="https://github.com/labbots/NiimPrintX/releases"><img src="https://img.shields.io/github/release/labbots/NiimPrintX.svg?style=for-the-badge" alt="Latest Release"></a>
-<a href="https://github.com/labbots/NiimPrintX/actions/workflows/tag.yaml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/labbots/NiimPrintX/tag.yaml?style=for-the-badge"></a>
-<a href="https://github.com/labbots/NiimPrintX/commits/main/"><img alt="GitHub commits since latest release" src="https://img.shields.io/github/commits-since/labbots/NiimPrintX/latest?style=for-the-badge"></a>
-</p>
+# NiimStudio
 
+NiimStudio currently provides a standalone Python console application for
+printing raster images with Niimbot Bluetooth label printers. The previous
+Tkinter application is archived on the `legacy/tkinter-app` branch while a new
+React interface is developed independently.
 
-![NiimPrintX](docs/assets/NiimPrintX.gif)
+## Features
 
-NiimPrintX is a Python library designed to seamlessly interface with NiimBot label printers via Bluetooth. 
-It provides both a Command-Line Interface (CLI) and a Graphical User Interface (GUI) for users to design and print labels efficiently.
+- BLE printer discovery and connection through Bleak
+- Image printing with density, quantity, rotation, and pixel offsets
+- Printer serial number, software version, and hardware version queries
+- Supported CLI model selectors: B1, B18, B21, D11, D11_H, and D110
+- Linux, macOS, and Windows console packaging
 
-## Key Features
-* **Cross-Platform Compatibility:** NiimPrintX works on Windows, macOS, and Linux, ensuring broad usability.
-* **Bluetooth Connectivity:** Effortlessly connect to your NiimBot label printers via Bluetooth.
-* **Comprehensive Model Support:** Compatible with multiple NiimBot printer models (D11, B21, B1, D110, B18).
-* **Dual Interface Options:** Provides both Command-Line Interface (CLI) and Graphical User Interface (GUI) to suit different user preferences.
-* **Custom Label Design:** The GUI app enables users to design labels tailored to specific devices and label sizes.
-* **Advanced Print Settings:** Customize print density, quantity, and image rotation for precise label printing.
+The complete implementation checklist is in `ai/project_features.md`.
 
 ## Requirements
-To run NiimPrintX, you need to have the following installed:
 
-* Python 3.12 or later
-* ImageMagick library
-* Poetry for dependency management
+- Python 3.12 or 3.13
+- Poetry 1.8 or newer
+- A supported Bluetooth adapter and operating-system BLE permissions
 
+The console application does not require Tkinter, Cairo, or ImageMagick.
 
 ## Installation
-To install NiimPrintX, follow these steps:
-
-* Ensure that ImageMagick is installed and properly configured on your system. You can download it from [here](https://imagemagick.org/script/download.php).
-
-Clone the repository:
 
 ```shell
-git clone https://github.com/labbots/NiimPrintX.git
-cd NiimPrintX
-```
-Install the necessary dependencies using Poetry:
-
-```shell
-python -m venv venv
+git clone https://github.com/csobik/NiimStudio.git
+cd NiimStudio
 poetry install
 ```
 
-### Note:
-MacOS specific setup for local development
-
-```shell
-brew install libffi
-brew install glib gobject-introspection cairo pkg-config
-
-export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
-export LDFLAGS="-L/usr/local/opt/libffi/lib"
-export CFLAGS="-I/usr/local/opt/libffi/include"
-```
-
-
 ## Usage
-NiimPrintX provides both CLI and GUI applications to use the printer.
 
-### Command-Line Interface (CLI)
-The CLI allows you to print images and get information about the printer models.
-
-#### General CLI Usage
-```shell
-Usage: python -m NiimPrintX.cli [OPTIONS] COMMAND [ARGS]...
-
-Options:
-  -v, --verbose  Enable verbose logging
-  -h, --help     Show this message and exit.
-
-Commands:
-  info
-  print
-```
-#### Print Command
-```shell
-Usage: python -m NiimPrintX.cli print [OPTIONS]
-
-Options:
-  -m, --model [b1|b18|b21|d11|d11_h|d110]
-                                  Niimbot printer model  [default: d110]
-  -d, --density INTEGER RANGE     Print density  [default: 3; 1<=x<=5]
-  -n, --quantity INTEGER          Print quantity  [default: 1]
-  -r, --rotate [0|90|180|270]     Image rotation (clockwise)  [default: 0]
-  --vo INTEGER                    Vertical offset in pixels  [default: 0]
-  --ho INTEGER                    Horizontal offset in pixels  [default: 0]
-  -i, --image PATH                Image path  [required]
-  -h, --help                      Show this message and exit.
-```
-**Example:**
+Run the module directly:
 
 ```shell
-python -m NiimPrintX.cli print -m d110 -d 3 -n 1 -r 90 -i path/to/image.png
+poetry run python -m NiimPrintX.cli --help
 ```
 
-#### Info Command
+Poetry also installs `niimstudio` and the compatibility command `niimprintx`:
 
 ```shell
-Usage: python -m NiimPrintX.cli info [OPTIONS]
-
-Options:
-  -m, --model [b1|b18|b21|d11|d110]
-                                  Niimbot printer model  [default: d110]
-  -h, --help                      Show this message and exit.
+poetry run niimstudio --help
 ```
 
-**Example:**
+### Print an image
 
 ```shell
-python -m NiimPrintX.cli info -m d110
+poetry run niimstudio print \
+  --model d110 \
+  --density 3 \
+  --quantity 1 \
+  --rotate 90 \
+  --image path/to/image.png
 ```
 
-### Graphical User Interface (GUI)
-The GUI application allows users to design labels based on the label device and label size. Simply run the GUI application:
+Use `--ho` and `--vo` for horizontal and vertical offsets in pixels.
+
+### Read printer information
 
 ```shell
-python -m NiimPrintX.ui
+poetry run niimstudio info --model d110
 ```
 
-## Contributing
-Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
+## Development
 
-## Credits
-* Icons made by [Dave Gandy](https://www.flaticon.com/authors/dave-gandy) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [Pixel perfect](https://www.flaticon.com/authors/pixel-perfect) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [Freepik](https://www.freepik.com) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [rddrt](https://www.flaticon.com/authors/rddrt) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [Icongeek26](https://www.flaticon.com/authors/icongeek26) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [SyafriStudio](https://www.flaticon.com/authors/syafristudio) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [Wahyu Adam](https://www.flaticon.com/authors/wahyu-adam) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [meaicon](https://www.flaticon.com/authors/meaicon) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [IconKanan](https://www.flaticon.com/authors/iconkanan) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [kornkun](https://www.flaticon.com/authors/kornkun) from [www.flaticon.com](https://www.flaticon.com/)
-* Icons made by [Rifaldi Ridha Aisy](https://www.flaticon.com/authors/rifaldi-ridha-aisy) from [www.flaticon.com](https://www.flaticon.com/)
+The automated suite does not access real Bluetooth hardware. It uses fake
+devices and transports to test CLI behavior, cleanup, packet validation, raster
+encoding, and printer command sequencing.
+
+```shell
+poetry check
+poetry run python -m compileall -q NiimPrintX
+poetry run ruff check NiimPrintX tests
+poetry run ruff format --check NiimPrintX tests
+poetry run pytest
+poetry run pyinstaller spec_files/cli_app/NiimStudio.spec --noconfirm --clean
+./dist/niimstudio --help
+```
+
+## Legacy Application
+
+The historical Tkinter editor, its assets, and GUI packaging remain available
+on the non-merge branch `legacy/tkinter-app` for reference and implementation
+research. New work does not depend on that branch.
+
+## License
+
+GNU GPLv3. See `LICENSE`.
