@@ -23,6 +23,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
         run: pipx install poetry==1.8.2
+      - name: Select Python interpreter
+        run: poetry env use "$pythonLocation/bin/python"
       - name: Install dependencies
         run: poetry install
       - name: Validate package metadata
