@@ -5,9 +5,9 @@ import pytest
 from click.testing import CliRunner
 from PIL import Image
 
-from NiimPrintX.cli import command
-from NiimPrintX.nimmy.exception import PrinterException
-from NiimPrintX.nimmy.printer import InfoEnum
+from NiimStudio.cli import command
+from NiimStudio.nimmy.exception import PrinterException
+from NiimStudio.nimmy.printer import InfoEnum
 
 
 def create_image(path, width=16, height=8):

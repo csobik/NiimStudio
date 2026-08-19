@@ -5,11 +5,11 @@ from typing import TypeVar
 import click
 from PIL import Image
 
-from NiimPrintX.cli.output import print_error, print_info, print_success
-from NiimPrintX.nimmy.bluetooth import find_device
-from NiimPrintX.nimmy.exception import PrinterException
-from NiimPrintX.nimmy.logger_config import get_logger, logger_enable, setup_logger
-from NiimPrintX.nimmy.printer import MAX_PROTOCOL_VALUE, InfoEnum, PrinterClient
+from NiimStudio.cli.output import print_error, print_info, print_success
+from NiimStudio.nimmy.bluetooth import find_device
+from NiimStudio.nimmy.exception import PrinterException
+from NiimStudio.nimmy.logger_config import get_logger, logger_enable, setup_logger
+from NiimStudio.nimmy.printer import MAX_PROTOCOL_VALUE, InfoEnum, PrinterClient
 
 MODEL_MAX_WIDTH_PX = {
     "b1": 384,

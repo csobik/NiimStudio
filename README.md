@@ -36,7 +36,7 @@ poetry install
 Run the module directly:
 
 ```shell
-poetry run python -m NiimPrintX.cli --help
+poetry run python -m NiimStudio.cli --help
 ```
 
 Poetry also installs `niimstudio` and the compatibility command `niimprintx`:
@@ -72,9 +72,9 @@ encoding, and printer command sequencing.
 
 ```shell
 poetry check
-poetry run python -m compileall -q NiimPrintX
-poetry run ruff check NiimPrintX tests
-poetry run ruff format --check NiimPrintX tests
+poetry run python -m compileall -q NiimStudio
+poetry run ruff check NiimStudio tests
+poetry run ruff format --check NiimStudio tests
 poetry run pytest
 poetry run pyinstaller spec_files/cli_app/NiimStudio.spec --noconfirm --clean
 ./dist/niimstudio --help

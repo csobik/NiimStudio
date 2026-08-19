@@ -5,7 +5,7 @@ description = "Console application for printing labels with Niimbot printers"
 authors = ["Labbots <labbots@gmail.com>"]
 license = "GNU GPLv3"
 readme = "README.md"
-packages = [{include = "NiimPrintX"}]
+packages = [{include = "NiimStudio"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.14"
@@ -22,12 +22,12 @@ pytest-cov = "^6.2.1"
 ruff = "^0.12.0"
 
 [tool.poetry.scripts]
-niimstudio = "NiimPrintX.cli.command:niimbot_cli"
-niimprintx = "NiimPrintX.cli.command:niimbot_cli"
+niimstudio = "NiimStudio.cli.command:niimbot_cli"
+niimprintx = "NiimStudio.cli.command:niimbot_cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --strict-config --cov=NiimPrintX.cli --cov=NiimPrintX.nimmy --cov-report=term-missing --cov-fail-under=80"
+addopts = "--strict-markers --strict-config --cov=NiimStudio.cli --cov=NiimStudio.nimmy --cov-report=term-missing --cov-fail-under=80"
 
 [tool.ruff]
 target-version = "py312"

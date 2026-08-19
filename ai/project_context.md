@@ -15,8 +15,8 @@ The product requirements and priorities are in `ai/project_features.md`.
 
 The repository currently contains a standalone Python console application:
 
-- `NiimPrintX/nimmy/`: BLE transport, printer protocol, and raster encoding
-- `NiimPrintX/cli/`: Click CLI
+- `NiimStudio/nimmy/`: BLE transport, printer protocol, and raster encoding
+- `NiimStudio/cli/`: Click CLI
 - `spec_files/cli_app/`: PyInstaller console packaging
 - `tests/`: hardware-independent CLI and printer-core verification
 
@@ -60,7 +60,7 @@ Rules:
 The package migration should converge incrementally toward:
 
 ```text
-NiimPrintX/
+NiimStudio/
   domain/
   application/
   adapters/

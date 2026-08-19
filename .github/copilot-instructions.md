@@ -12,9 +12,9 @@ Use Poetry for setup and verification:
 ```bash
 poetry install
 poetry check
-poetry run python -m compileall -q NiimPrintX
-poetry run ruff check NiimPrintX tests
-poetry run ruff format --check NiimPrintX tests
+poetry run python -m compileall -q NiimStudio
+poetry run ruff check NiimStudio tests
+poetry run ruff format --check NiimStudio tests
 poetry run pytest
 ```
 

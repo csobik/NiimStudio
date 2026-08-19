@@ -1,6 +1,6 @@
 import pytest
 
-from NiimPrintX.nimmy.packet import NiimbotPacket, packet_to_int
+from NiimStudio.nimmy.packet import NiimbotPacket, packet_to_int
 
 
 @pytest.mark.parametrize(

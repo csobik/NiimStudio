@@ -30,11 +30,11 @@ jobs:
       - name: Validate package metadata
         run: poetry check
       - name: Compile Python sources
-        run: poetry run python -m compileall -q NiimPrintX
+        run: poetry run python -m compileall -q NiimStudio
       - name: Check code style
-        run: poetry run ruff check NiimPrintX tests
+        run: poetry run ruff check NiimStudio tests
       - name: Check formatting
-        run: poetry run ruff format --check NiimPrintX tests
+        run: poetry run ruff format --check NiimStudio tests
       - name: Run tests
         run: poetry run pytest
       - name: Build Python distributions

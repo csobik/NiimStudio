@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock
 import pytest
 from bleak.exc import BleakError
 
-from NiimPrintX.nimmy import bluetooth
-from NiimPrintX.nimmy.exception import BLEException
+from NiimStudio.nimmy import bluetooth
+from NiimStudio.nimmy.exception import BLEException
 
 
 def test_find_device_matches_prefix_case_insensitively(monkeypatch):
