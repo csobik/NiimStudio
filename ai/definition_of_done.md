@@ -10,11 +10,11 @@ Run checks in this order where they apply:
 | Scope | Check | Command |
 | --- | --- | --- |
 | Every change | Diff whitespace and conflict markers | `git diff --check` |
-| Python | Syntax/import compilation | `poetry --directory backend run python -m compileall -q backend/src/niimstudio` |
+| Python | Syntax/import compilation | `poetry --directory backend run python -m compileall -q src/niimstudio` |
 | Python metadata | Poetry validity | `poetry --directory backend check` |
-| Python tests | Unit, integration, and minimum 80% coverage | `poetry --directory backend run pytest -c backend/pyproject.toml` |
-| Python lint | Ruff static checks | `poetry --directory backend run ruff check backend/src/niimstudio backend/tests` |
-| Python format | Ruff formatting | `poetry --directory backend run ruff format --check backend/src/niimstudio backend/tests` |
+| Python tests | Unit, integration, and minimum 80% coverage | `poetry --directory backend run pytest -c pyproject.toml` |
+| Python lint | Ruff static checks | `poetry --directory backend run ruff check src/niimstudio tests` |
+| Python format | Ruff formatting | `poetry --directory backend run ruff format --check src/niimstudio tests` |
 | Documentation | Paths, commands, and cross-references | Verify against the current tree |
 
 Do not invent commands for tooling the repository has not configured. If a

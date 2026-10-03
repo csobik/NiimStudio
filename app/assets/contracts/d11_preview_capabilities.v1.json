@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "model_id": "d11",
+  "model_name": "NIIMBOT D11",
+  "dpi_x": 203,
+  "dpi_y": 203,
+  "label_id": "d-12x40",
+  "label_name": "12 x 40 mm",
+  "media_width_mm": "12",
+  "media_length_mm": "40",
+  "native_width_px": 96,
+  "native_length_px": 320
+}

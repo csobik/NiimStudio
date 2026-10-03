@@ -14,7 +14,7 @@ The available customer-facing behavior is recorded in `ai/features/`.
 
 ## Current Implementation
 
-- Python 3.12-3.13 application managed with Poetry.
+- Python 3.12-3.14 application managed with Poetry.
 - Click command-line interface in `backend/src/niimstudio/cli/`.
 - Bluetooth discovery and printer protocol implementation in
   `backend/src/niimstudio/nimmy/` using Bleak.

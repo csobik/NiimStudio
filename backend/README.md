@@ -15,7 +15,7 @@ The complete implementation checklist is in `ai/features/README.md`.
 
 ## Requirements
 
-- Python 3.12 or 3.13
+- Python 3.12, 3.13, or 3.14
 - Poetry 1.8 or newer
 - A supported Bluetooth adapter and operating-system BLE permissions
 
