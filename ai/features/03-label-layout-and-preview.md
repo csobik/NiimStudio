@@ -24,7 +24,10 @@ content rotation, monochrome conversion, and device raster orientation.
 ## Text Formatting
 
 - [ ] Support one or more text lines with font family, size, weight, horizontal
-  alignment, vertical alignment, line spacing, and padding.
+  alignment, vertical alignment, and line spacing.
+- [ ] Let users select a small content safe-margin preset expressed in physical
+  units, apply it identically to automatic fitting, preview, and the final
+  printer raster, and start new labels with a balanced non-edge default.
 - [ ] Allow different font sizes for individual lines, including a deterministic
   ratio such as a subtitle at half the title size.
 - [x] Bundle approved fonts so the same label does not depend on fonts installed

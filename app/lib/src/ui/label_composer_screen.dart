@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../adapters/d11_capability_loader.dart';
+import '../adapters/universal_ble_d11_gateway.dart';
 import '../domain/label_geometry.dart';
+import '../printing/d11_print_controller.dart';
+import '../printing/d11_printer_gateway.dart';
 import '../rendering/label_text_renderer.dart';
 
 final class LabelComposerScreen extends StatefulWidget {
@@ -9,37 +14,70 @@ final class LabelComposerScreen extends StatefulWidget {
     super.key,
     required this.capability,
     this.composer,
+    this.printController,
   });
 
   final D11PreviewCapability capability;
   final LabelComposer? composer;
+  final D11PrintController? printController;
 
   @override
   State<LabelComposerScreen> createState() => _LabelComposerScreenState();
 }
 
-final class _LabelComposerScreenState extends State<LabelComposerScreen> {
+final class _LabelComposerScreenState extends State<LabelComposerScreen>
+    with WidgetsBindingObserver {
   late final LabelComposer _composer;
+  late final D11PrintController _printController;
+  late final bool _ownsPrintController;
   late Future<RenderedLabel> _preview;
+  MonochromeRaster? _printableRaster;
+  var _renderRevision = 0;
   var _text = '';
   var _orientation = LabelContentOrientation.landscape;
+  var _marginPreset = LabelSafeMarginPreset.normal;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _composer =
         widget.composer ??
         LabelTextRenderer(geometry: widget.capability.geometry);
+    _ownsPrintController = widget.printController == null;
+    _printController =
+        widget.printController ?? D11PrintController(UniversalBleD11Gateway());
     _preview = _render();
   }
 
   Future<RenderedLabel> _render() {
-    return _composer.render(text: _text, orientation: _orientation);
+    final revision = ++_renderRevision;
+    final preview = _composer.render(
+      text: _text,
+      orientation: _orientation,
+      marginPreset: _marginPreset,
+    );
+    unawaited(
+      preview.then<void>((rendered) {
+        if (!mounted || revision != _renderRevision) {
+          return;
+        }
+        setState(() {
+          _printableRaster =
+              rendered.failure == null &&
+                  rendered.nativeRaster.blackPixelCount > 0
+              ? rendered.nativeRaster
+              : null;
+        });
+      }, onError: (_) {}),
+    );
+    return preview;
   }
 
   void _updateText(String text) {
     setState(() {
       _text = text;
+      _printableRaster = null;
       _preview = _render();
     });
   }
@@ -50,8 +88,49 @@ final class _LabelComposerScreenState extends State<LabelComposerScreen> {
     }
     setState(() {
       _orientation = orientation;
+      _printableRaster = null;
       _preview = _render();
     });
+  }
+
+  void _updateMarginPreset(LabelSafeMarginPreset marginPreset) {
+    if (_marginPreset == marginPreset) {
+      return;
+    }
+    setState(() {
+      _marginPreset = marginPreset;
+      _printableRaster = null;
+      _preview = _render();
+    });
+  }
+
+  void _printCurrentRaster() {
+    final raster = _printableRaster;
+    if (raster == null || !_printController.canPrint(raster)) {
+      return;
+    }
+    unawaited(_printController.print(raster));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed || AppLifecycleState.inactive:
+        return;
+      case AppLifecycleState.hidden ||
+          AppLifecycleState.paused ||
+          AppLifecycleState.detached:
+        unawaited(_printController.cancelActiveOperation());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (_ownsPrintController) {
+      _printController.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -65,9 +144,14 @@ final class _LabelComposerScreenState extends State<LabelComposerScreen> {
             final editor = _EditorPanel(
               capability: widget.capability,
               orientation: _orientation,
+              marginPreset: _marginPreset,
               canvas: canvas,
               onTextChanged: _updateText,
               onOrientationChanged: _updateOrientation,
+              onMarginPresetChanged: _updateMarginPreset,
+              printController: _printController,
+              printableRaster: _printableRaster,
+              onPrint: _printCurrentRaster,
             );
             final preview = _PreviewPanel(
               preview: _preview,
@@ -82,7 +166,10 @@ final class _LabelComposerScreenState extends State<LabelComposerScreen> {
                   key: const Key('composer-desktop-layout'),
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(width: 360, child: editor),
+                    SizedBox(
+                      width: 360,
+                      child: SingleChildScrollView(child: editor),
+                    ),
                     const SizedBox(width: 40),
                     Expanded(child: preview),
                   ],
@@ -107,16 +194,26 @@ final class _EditorPanel extends StatelessWidget {
   const _EditorPanel({
     required this.capability,
     required this.orientation,
+    required this.marginPreset,
     required this.canvas,
     required this.onTextChanged,
     required this.onOrientationChanged,
+    required this.onMarginPresetChanged,
+    required this.printController,
+    required this.printableRaster,
+    required this.onPrint,
   });
 
   final D11PreviewCapability capability;
   final LabelContentOrientation orientation;
+  final LabelSafeMarginPreset marginPreset;
   final LabelCanvas canvas;
   final ValueChanged<String> onTextChanged;
   final ValueChanged<LabelContentOrientation> onOrientationChanged;
+  final ValueChanged<LabelSafeMarginPreset> onMarginPresetChanged;
+  final D11PrintController printController;
+  final MonochromeRaster? printableRaster;
+  final VoidCallback onPrint;
 
   @override
   Widget build(BuildContext context) {
@@ -158,27 +255,47 @@ final class _EditorPanel extends StatelessWidget {
         const SizedBox(height: 24),
         Text('Reading orientation', style: textTheme.labelLarge),
         const SizedBox(height: 10),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: ChoiceChip(
-                key: const Key('orientation-landscape'),
-                label: const Text('Landscape'),
-                selected: orientation == LabelContentOrientation.landscape,
-                onSelected: (_) =>
-                    onOrientationChanged(LabelContentOrientation.landscape),
-              ),
+            ChoiceChip(
+              key: const Key('orientation-landscape'),
+              label: const Text('Landscape'),
+              selected: orientation == LabelContentOrientation.landscape,
+              onSelected: (_) =>
+                  onOrientationChanged(LabelContentOrientation.landscape),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: ChoiceChip(
-                key: const Key('orientation-portrait'),
-                label: const Text('Portrait'),
-                selected: orientation == LabelContentOrientation.portrait,
-                onSelected: (_) =>
-                    onOrientationChanged(LabelContentOrientation.portrait),
-              ),
+            ChoiceChip(
+              key: const Key('orientation-portrait'),
+              label: const Text('Portrait'),
+              selected: orientation == LabelContentOrientation.portrait,
+              onSelected: (_) =>
+                  onOrientationChanged(LabelContentOrientation.portrait),
             ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text('Content margin', style: textTheme.labelLarge),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final preset in LabelSafeMarginPreset.values)
+              ChoiceChip(
+                key: Key('margin-${preset.name}'),
+                label: Semantics(
+                  label: _marginSemanticsLabel(preset),
+                  excludeSemantics: true,
+                  child: Text(
+                    '${preset.displayLabel}\n${_millimetreValue(preset)} mm',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                selected: marginPreset == preset,
+                onSelected: (_) => onMarginPresetChanged(preset),
+              ),
           ],
         ),
         const SizedBox(height: 24),
@@ -210,7 +327,119 @@ final class _EditorPanel extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 24),
+        _PrinterPanel(
+          controller: printController,
+          raster: printableRaster,
+          onPrint: onPrint,
+        ),
       ],
+    );
+  }
+}
+
+final class _PrinterPanel extends StatelessWidget {
+  const _PrinterPanel({
+    required this.controller,
+    required this.raster,
+    required this.onPrint,
+  });
+
+  final D11PrintController controller;
+  final MonochromeRaster? raster;
+  final VoidCallback onPrint;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final devices = controller.devices;
+        final selected = controller.selectedDevice;
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'BLUETOOTH PRINT',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('printer-scan-button'),
+                    onPressed: controller.isBusy ? null : controller.scan,
+                    icon: const Icon(Icons.bluetooth_searching),
+                    label: Text(
+                      controller.state == D11PrintUiState.scanning
+                          ? 'Scanning'
+                          : 'Find D11',
+                    ),
+                  ),
+                ],
+              ),
+              if (devices.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  key: const Key('printer-device-select'),
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'printer-${devices.map((device) => device.id).join('-')}-'
+                      '${selected?.id}',
+                    ),
+                    initialValue: selected?.id,
+                    decoration: const InputDecoration(labelText: 'D11 printer'),
+                    items: [
+                      for (final device in devices)
+                        DropdownMenuItem(
+                          value: device.id,
+                          child: Text(_deviceLabel(device)),
+                        ),
+                    ],
+                    onChanged: controller.isBusy
+                        ? null
+                        : (id) {
+                            final device = devices
+                                .where((item) => item.id == id)
+                                .firstOrNull;
+                            controller.selectDevice(device);
+                          },
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  controller.status,
+                  key: const Key('printer-status'),
+                ),
+              ),
+              if (controller.isBusy) ...[
+                const SizedBox(height: 10),
+                LinearProgressIndicator(value: controller.progress),
+              ],
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                key: const Key('print-label-button'),
+                onPressed: controller.canPrint(raster) ? onPrint : null,
+                icon: const Icon(Icons.print_outlined),
+                label: const Text('Print label'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -381,4 +610,21 @@ String _orientationName(LabelCanvas canvas) {
   return canvas.displayWidthMm > canvas.displayHeightMm
       ? 'landscape'
       : 'portrait';
+}
+
+String _millimetreValue(LabelSafeMarginPreset preset) {
+  final millimetres = preset.millimetres;
+  return millimetres == millimetres.truncateToDouble()
+      ? millimetres.toStringAsFixed(0)
+      : millimetres.toStringAsFixed(1);
+}
+
+String _marginSemanticsLabel(LabelSafeMarginPreset preset) {
+  final unit = preset.millimetres == 1 ? 'millimetre' : 'millimetres';
+  return '${preset.displayLabel}, ${_millimetreValue(preset)} $unit';
+}
+
+String _deviceLabel(D11PrinterDevice device) {
+  final rssi = device.rssi;
+  return rssi == null ? device.name : '${device.name}  $rssi dBm';
 }

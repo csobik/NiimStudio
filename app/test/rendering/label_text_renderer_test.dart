@@ -11,7 +11,7 @@ void main() {
     mediaLengthMm: 40,
     nativeSizePx: PixelSize(width: 96, height: 320),
   );
-  const renderer = LabelTextRenderer(geometry: geometry, paddingPx: 8);
+  const renderer = LabelTextRenderer(geometry: geometry);
 
   setUpAll(() async {
     final fontLoader = FontLoader('BarlowCondensedBundled')
@@ -26,6 +26,7 @@ void main() {
       () => renderer.render(
         text: '',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
 
@@ -46,6 +47,7 @@ void main() {
       () => renderer.render(
         text: '3,5x016',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
 
@@ -56,6 +58,7 @@ void main() {
         text: '3,5x016',
         orientation: LabelContentOrientation.landscape,
         fontSizePx: label.fontSizePx!,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
     final nextSizeFits = (await tester.runAsync(
@@ -63,6 +66,7 @@ void main() {
         text: '3,5x016',
         orientation: LabelContentOrientation.landscape,
         fontSizePx: label.fontSizePx! + 1,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
     expect(selectedSizeFits, isTrue);
@@ -76,6 +80,7 @@ void main() {
       () => renderer.render(
         text: '3,5x016',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
     final bounds = label.logicalRaster.blackBounds;
@@ -83,10 +88,71 @@ void main() {
     expect(bounds, isNotNull);
     expect(bounds!.centerX, closeTo(159.5, 0.5));
     expect(bounds.centerY, closeTo(47.5, 0.5));
-    expect(bounds.left, greaterThanOrEqualTo(8));
-    expect(bounds.top, greaterThanOrEqualTo(8));
-    expect(bounds.right, lessThan(312));
-    expect(bounds.bottom, lessThan(88));
+    expect(bounds.left, greaterThanOrEqualTo(12));
+    expect(bounds.top, greaterThanOrEqualTo(12));
+    expect(bounds.right, lessThan(308));
+    expect(bounds.bottom, lessThan(84));
+  });
+
+  const presetInsets = {
+    LabelSafeMarginPreset.tight: 8,
+    LabelSafeMarginPreset.normal: 12,
+    LabelSafeMarginPreset.wide: 20,
+  };
+  for (final orientation in LabelContentOrientation.values) {
+    for (final MapEntry(key: preset, value: insetPx) in presetInsets.entries) {
+      testWidgets('$preset keeps ink inside every $orientation edge', (
+        tester,
+      ) async {
+        final label = (await tester.runAsync(
+          () => renderer.render(
+            text: '3,5x016',
+            orientation: orientation,
+            marginPreset: preset,
+          ),
+        ))!;
+        final bounds = label.logicalRaster.blackBounds!;
+        final size = label.logicalRaster.size;
+
+        expect(bounds.left, greaterThanOrEqualTo(insetPx));
+        expect(bounds.top, greaterThanOrEqualTo(insetPx));
+        expect(bounds.right, lessThan(size.width - insetPx));
+        expect(bounds.bottom, lessThan(size.height - insetPx));
+      });
+    }
+  }
+
+  testWidgets('wider margins cannot increase the selected font size', (
+    tester,
+  ) async {
+    final normal = (await tester.runAsync(
+      () => renderer.render(
+        text: '3,5x016',
+        orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
+      ),
+    ))!;
+    final wide = (await tester.runAsync(
+      () => renderer.render(
+        text: '3,5x016',
+        orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.wide,
+      ),
+    ))!;
+
+    expect(wide.fontSizePx, lessThan(normal.fontSizePx!));
+  });
+
+  testWidgets('rendered raster bytes cannot be mutated', (tester) async {
+    final label = (await tester.runAsync(
+      () => renderer.render(
+        text: '3,5x016',
+        orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
+      ),
+    ))!;
+
+    expect(() => label.nativeRaster.bytes[0] = 0xff, throwsUnsupportedError);
   });
 
   testWidgets('landscape logical pixels map exactly to the native raster', (
@@ -96,6 +162,7 @@ void main() {
       () => renderer.render(
         text: '3,5x016',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
 
@@ -120,6 +187,7 @@ void main() {
       () => renderer.render(
         text: List.filled(200, 'W').join(),
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.wide,
       ),
     ))!;
 
@@ -136,6 +204,7 @@ void main() {
       () => renderer.render(
         text: 'LED 💡',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
 
@@ -152,6 +221,7 @@ void main() {
         () => renderer.render(
           text: text,
           orientation: LabelContentOrientation.landscape,
+          marginPreset: LabelSafeMarginPreset.normal,
         ),
       ))!;
 
@@ -167,6 +237,7 @@ void main() {
       () => renderer.render(
         text: 'Číslo žárovky',
         orientation: LabelContentOrientation.landscape,
+        marginPreset: LabelSafeMarginPreset.normal,
       ),
     ))!;
 

@@ -24,7 +24,7 @@ final class RasterBounds {
 
 final class MonochromeRaster {
   MonochromeRaster({required this.size, required Uint8List bytes})
-    : bytes = Uint8List.fromList(bytes) {
+    : bytes = Uint8List.fromList(bytes).asUnmodifiableView() {
     if (this.bytes.length != bytesPerRow * size.height) {
       throw ArgumentError.value(bytes.length, 'bytes', 'Unexpected length');
     }
@@ -107,29 +107,27 @@ abstract interface class LabelComposer {
   Future<RenderedLabel> render({
     required String text,
     required LabelContentOrientation orientation,
+    required LabelSafeMarginPreset marginPreset,
   });
 }
 
 final class LabelTextRenderer implements LabelComposer {
-  const LabelTextRenderer({
-    required this.geometry,
-    this.paddingPx = 8,
-    this.minimumFontSizePx = 8,
-  });
+  const LabelTextRenderer({required this.geometry, this.minimumFontSizePx = 8});
 
   static const fontFamily = 'BarlowCondensedBundled';
   static const _threshold = 128;
 
   final D11LabelGeometry geometry;
-  final int paddingPx;
   final int minimumFontSizePx;
 
   @override
   Future<RenderedLabel> render({
     required String text,
     required LabelContentOrientation orientation,
+    required LabelSafeMarginPreset marginPreset,
   }) async {
     final canvas = geometry.canvasFor(orientation);
+    final contentInsets = canvas.contentInsetsFor(marginPreset);
     final blankLogical = MonochromeRaster.blank(canvas.logicalSizePx);
     final blankNative = MonochromeRaster.blank(canvas.nativeSizePx);
     if (!_hasSupportedCharacters(text)) {
@@ -152,6 +150,7 @@ final class LabelTextRenderer implements LabelComposer {
     final fontSizePx = await _largestFittingFontSize(
       text,
       canvas.logicalSizePx,
+      contentInsets,
     );
     if (fontSizePx == null) {
       return RenderedLabel(
@@ -179,38 +178,43 @@ final class LabelTextRenderer implements LabelComposer {
     required String text,
     required LabelContentOrientation orientation,
     required int fontSizePx,
+    required LabelSafeMarginPreset marginPreset,
   }) async {
+    final canvas = geometry.canvasFor(orientation);
     return _fitsInk(
       text,
       fontSizePx,
-      geometry.canvasFor(orientation).logicalSizePx,
+      canvas.logicalSizePx,
+      canvas.contentInsetsFor(marginPreset),
     );
   }
 
   Future<int?> _largestFittingFontSize(
     String text,
     PixelSize canvasSize,
+    LabelContentInsets contentInsets,
   ) async {
-    if (!await _fitsInk(text, minimumFontSizePx, canvasSize)) {
+    if (!await _fitsInk(text, minimumFontSizePx, canvasSize, contentInsets)) {
       return null;
     }
 
     var low = minimumFontSizePx;
     var high = minimumFontSizePx * 2;
-    while (high < 2048 && await _fitsInk(text, high, canvasSize)) {
+    while (high < 2048 &&
+        await _fitsInk(text, high, canvasSize, contentInsets)) {
       low = high;
       high *= 2;
     }
     if (high > 2048) {
       high = 2048;
     }
-    if (await _fitsInk(text, high, canvasSize)) {
+    if (await _fitsInk(text, high, canvasSize, contentInsets)) {
       return high;
     }
 
     while (low + 1 < high) {
       final candidate = (low + high) ~/ 2;
-      if (await _fitsInk(text, candidate, canvasSize)) {
+      if (await _fitsInk(text, candidate, canvasSize, contentInsets)) {
         low = candidate;
       } else {
         high = candidate;
@@ -223,6 +227,7 @@ final class LabelTextRenderer implements LabelComposer {
     String text,
     int fontSizePx,
     PixelSize canvasSize,
+    LabelContentInsets contentInsets,
   ) async {
     if (fontSizePx <= 0 || !_hasSupportedCharacters(text)) {
       return false;
@@ -232,8 +237,10 @@ final class LabelTextRenderer implements LabelComposer {
     if (bounds == null) {
       return false;
     }
-    return bounds.right - bounds.left + 1 <= canvasSize.width - 2 * paddingPx &&
-        bounds.bottom - bounds.top + 1 <= canvasSize.height - 2 * paddingPx;
+    return bounds.right - bounds.left + 1 <=
+            canvasSize.width - 2 * contentInsets.horizontalPx &&
+        bounds.bottom - bounds.top + 1 <=
+            canvasSize.height - 2 * contentInsets.verticalPx;
   }
 
   Future<MonochromeRaster> _renderLogicalRaster(

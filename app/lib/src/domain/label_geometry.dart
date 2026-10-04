@@ -1,5 +1,19 @@
 enum LabelContentOrientation { portrait, landscape }
 
+enum LabelSafeMarginPreset {
+  tight(displayLabel: 'Tight', millimetres: 1),
+  normal(displayLabel: 'Normal', millimetres: 1.5),
+  wide(displayLabel: 'Wide', millimetres: 2.5);
+
+  const LabelSafeMarginPreset({
+    required this.displayLabel,
+    required this.millimetres,
+  });
+
+  final String displayLabel;
+  final double millimetres;
+}
+
 final class PixelSize {
   const PixelSize({required this.width, required this.height});
 
@@ -28,6 +42,25 @@ final class PixelPoint {
   int get hashCode => Object.hash(x, y);
 }
 
+final class LabelContentInsets {
+  const LabelContentInsets({
+    required this.horizontalPx,
+    required this.verticalPx,
+  });
+
+  final int horizontalPx;
+  final int verticalPx;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LabelContentInsets &&
+      other.horizontalPx == horizontalPx &&
+      other.verticalPx == verticalPx;
+
+  @override
+  int get hashCode => Object.hash(horizontalPx, verticalPx);
+}
+
 final class LabelCanvas {
   const LabelCanvas({
     required this.logicalSizePx,
@@ -40,6 +73,21 @@ final class LabelCanvas {
   final double displayWidthMm;
   final double displayHeightMm;
   final PixelSize nativeSizePx;
+
+  LabelContentInsets contentInsetsFor(LabelSafeMarginPreset preset) {
+    final horizontalPx =
+        (preset.millimetres * logicalSizePx.width / displayWidthMm).round();
+    final verticalPx =
+        (preset.millimetres * logicalSizePx.height / displayHeightMm).round();
+    if (logicalSizePx.width - 2 * horizontalPx <= 0 ||
+        logicalSizePx.height - 2 * verticalPx <= 0) {
+      throw StateError('Safe margin leaves no positive label content area');
+    }
+    return LabelContentInsets(
+      horizontalPx: horizontalPx,
+      verticalPx: verticalPx,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

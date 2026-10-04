@@ -32,6 +32,66 @@ void main() {
     );
   });
 
+  test('safe-margin presets have stable labels and physical values', () {
+    expect(LabelSafeMarginPreset.values, [
+      LabelSafeMarginPreset.tight,
+      LabelSafeMarginPreset.normal,
+      LabelSafeMarginPreset.wide,
+    ]);
+    expect(
+      LabelSafeMarginPreset.values
+          .map((preset) => (preset.displayLabel, preset.millimetres))
+          .toList(),
+      [('Tight', 1.0), ('Normal', 1.5), ('Wide', 2.5)],
+    );
+  });
+
+  test('every preset resolves on every D11 edge in both orientations', () {
+    const expectedInsets = {
+      LabelSafeMarginPreset.tight: 8,
+      LabelSafeMarginPreset.normal: 12,
+      LabelSafeMarginPreset.wide: 20,
+    };
+
+    for (final orientation in LabelContentOrientation.values) {
+      for (final MapEntry(key: preset, value: insetPx)
+          in expectedInsets.entries) {
+        expect(
+          geometry.canvasFor(orientation).contentInsetsFor(preset),
+          LabelContentInsets(horizontalPx: insetPx, verticalPx: insetPx),
+        );
+      }
+    }
+  });
+
+  test('margin conversion rounds each logical axis independently', () {
+    const canvas = LabelCanvas(
+      logicalSizePx: PixelSize(width: 101, height: 199),
+      displayWidthMm: 20,
+      displayHeightMm: 30,
+      nativeSizePx: PixelSize(width: 101, height: 199),
+    );
+
+    expect(
+      canvas.contentInsetsFor(LabelSafeMarginPreset.normal),
+      const LabelContentInsets(horizontalPx: 8, verticalPx: 10),
+    );
+  });
+
+  test('rejects a safe margin that leaves no positive content area', () {
+    const canvas = LabelCanvas(
+      logicalSizePx: PixelSize(width: 4, height: 40),
+      displayWidthMm: 4,
+      displayHeightMm: 40,
+      nativeSizePx: PixelSize(width: 4, height: 40),
+    );
+
+    expect(
+      () => canvas.contentInsetsFor(LabelSafeMarginPreset.wide),
+      throwsStateError,
+    );
+  });
+
   test('landscape maps clockwise into native pixels without mirroring', () {
     expect(
       geometry.logicalToNative(

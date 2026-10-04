@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'adapters/d11_capability_loader.dart';
+import 'printing/d11_print_controller.dart';
 import 'rendering/label_text_renderer.dart';
 import 'ui/label_composer_screen.dart';
 
 final class NiimStudioApp extends StatelessWidget {
-  const NiimStudioApp({super.key, required this.capability, this.composer});
+  const NiimStudioApp({
+    super.key,
+    required this.capability,
+    this.composer,
+    this.printController,
+  });
 
   final D11PreviewCapability capability;
   final LabelComposer? composer;
+  final D11PrintController? printController;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +43,11 @@ final class NiimStudioApp extends StatelessWidget {
           border: OutlineInputBorder(),
         ),
       ),
-      home: LabelComposerScreen(capability: capability, composer: composer),
+      home: LabelComposerScreen(
+        capability: capability,
+        composer: composer,
+        printController: printController,
+      ),
     );
   }
 }

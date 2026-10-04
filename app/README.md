@@ -1,9 +1,11 @@
 # NiimStudio App
 
 This Flutter application is the Android and Linux label-composition interface
-for NiimStudio. The first slice previews one centered line of text for the D11
-12 x 40 mm label in portrait or landscape reading orientation. Bluetooth and
-printing are not implemented yet.
+for NiimStudio. It previews and prints one centered line of text for the D11
+12 x 40 mm label in portrait or landscape reading orientation. Users explicitly
+scan for and select a nearby D11 over Bluetooth before printing the latest valid
+preview raster. Other printer models and saved printer settings are not yet
+supported in the app.
 
 ## Development
 
